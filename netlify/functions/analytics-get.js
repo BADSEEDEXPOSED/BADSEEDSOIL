@@ -44,7 +44,7 @@ exports.handler = async function(event, context) {
 
     if (isProduction()) {
       // PRODUCTION: Use Netlify Blobs with siteID and token from env
-      const siteID = process.env.SITE_ID;
+      const siteID = process.env.SOIL_SITE_ID;
       const token = process.env.NETLIFY_BLOBS_TOKEN || process.env.BLOB_TOKEN;
 
       if (siteID && token) {
