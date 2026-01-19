@@ -1,5 +1,44 @@
 // BADSEED SOIL - Gateway Controller
 
+// ========== BROWSER BACK NAVIGATION HANDLER ==========
+// Must be outside DOMContentLoaded to catch bfcache restoration
+window.addEventListener('pageshow', (event) => {
+    // Reset if page is restored from bfcache OR if loading screen is visible
+    const loadingScreen = document.getElementById('loading-screen');
+    const videoOverlay = document.getElementById('video-overlay');
+    const isLoadingVisible = loadingScreen && !loadingScreen.classList.contains('hidden');
+    const isVideoVisible = videoOverlay && !videoOverlay.classList.contains('hidden');
+
+    if (event.persisted || isLoadingVisible || isVideoVisible) {
+        // Reset all transition UI
+        if (videoOverlay) {
+            videoOverlay.classList.add('hidden');
+        }
+
+        const transitionVideo = document.getElementById('transition-video');
+        if (transitionVideo) {
+            transitionVideo.pause();
+            transitionVideo.currentTime = 0;
+            transitionVideo.src = '';
+        }
+
+        if (loadingScreen) {
+            loadingScreen.classList.add('hidden');
+            loadingScreen.classList.remove('fading');
+        }
+
+        const energyCanvas = document.getElementById('energy-canvas');
+        if (energyCanvas) {
+            const ctx = energyCanvas.getContext('2d');
+            if (ctx) {
+                ctx.clearRect(0, 0, energyCanvas.width, energyCanvas.height);
+            }
+        }
+
+        console.log('[SOIL] Page state reset on pageshow');
+    }
+});
+
 document.addEventListener('DOMContentLoaded', () => {
     const cards = document.querySelectorAll('.card');
     const videoOverlay = document.getElementById('video-overlay');
@@ -13,47 +52,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let particles = [];
     let tendrils = [];
 
-    // ========== BROWSER BACK NAVIGATION HANDLER ==========
-    // Reset UI state when user navigates back via browser history
-    window.addEventListener('pageshow', (event) => {
-        // event.persisted is true when page is restored from bfcache
-        if (event.persisted || performance.getEntriesByType('navigation')[0]?.type === 'back_forward') {
-            resetPageState();
-        }
-    });
-
-    function resetPageState() {
-        // Reset transition state
+    // Reset isTransitioning flag on pageshow (for bfcache restoration)
+    window.addEventListener('pageshow', () => {
         isTransitioning = false;
-
-        // Hide video overlay
-        if (videoOverlay) {
-            videoOverlay.classList.add('hidden');
-        }
-
-        // Stop and reset video
-        if (transitionVideo) {
-            transitionVideo.pause();
-            transitionVideo.currentTime = 0;
-            transitionVideo.src = '';
-        }
-
-        // Hide loading screen and remove fading class
-        if (loadingScreen) {
-            loadingScreen.classList.add('hidden');
-            loadingScreen.classList.remove('fading');
-        }
-
-        // Stop energy effect if running
-        stopEnergyEffect();
-
-        // Clear canvas if it exists
-        if (ctx && energyCanvas) {
-            ctx.clearRect(0, 0, energyCanvas.width, energyCanvas.height);
-        }
-
-        console.log('[SOIL] Page state reset after back navigation');
-    }
+    });
 
     // Track iframe ready states
     const iframeReadyState = {
