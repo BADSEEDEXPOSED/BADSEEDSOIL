@@ -8,8 +8,32 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <!-- Custom Cursor -->
+    <div id="custom-cursor" class="custom-cursor">
+        <img src="cursoroff.gif" alt="" id="cursor-img">
+    </div>
+
+    <!-- Intro Video Splash -->
+    <div id="intro-splash" class="intro-splash">
+        <video id="intro-video" playsinline muted autoplay>
+            <source src="intro.mp4" type="video/mp4">
+        </video>
+    </div>
+
+    <!-- Custom Context Menu -->
+    <div id="context-menu" class="context-menu hidden">
+        <div class="context-menu-header">BADSEED</div>
+        <div class="context-menu-divider"></div>
+        <a href="https://badseed.netlify.app" class="context-menu-item">EXPOSED</a>
+        <a href="https://badseedtoken.netlify.app" class="context-menu-item">TOKEN</a>
+        <a href="https://badseed-agent.netlify.app" class="context-menu-item">AGENT</a>
+        <div class="context-menu-divider"></div>
+        <a href="https://x.com/BADSEEDEXPOSED" target="_blank" class="context-menu-item">X ACCOUNT</a>
+        <a href="https://pump.fun/coin/3HPpMLK7LjKFqSnCsBYNiijhNTo7dkkx3FCSAHKSpump" target="_blank" class="context-menu-item">TOKEN LAUNCH</a>
+    </div>
+
     <!-- Main Gateway -->
-    <div id="gateway" class="gateway">
+    <div id="gateway" class="gateway hidden">
         <!-- Background seed with glow -->
         <div class="seed-container">
             <div class="seed-glow"></div>

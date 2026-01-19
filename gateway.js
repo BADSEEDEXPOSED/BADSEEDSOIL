@@ -1,5 +1,48 @@
 // BADSEED SOIL - Gateway Controller
 
+// ========== CUSTOM CURSOR ==========
+const customCursor = document.getElementById('custom-cursor');
+const cursorImg = document.getElementById('cursor-img');
+let isOverCard = false;
+
+// Move cursor with mouse
+document.addEventListener('mousemove', (e) => {
+    if (customCursor) {
+        customCursor.style.left = e.clientX + 'px';
+        customCursor.style.top = e.clientY + 'px';
+    }
+});
+
+// Show/hide cursor on enter/leave window
+document.addEventListener('mouseenter', () => {
+    if (customCursor) customCursor.style.opacity = '1';
+});
+
+document.addEventListener('mouseleave', () => {
+    if (customCursor) customCursor.style.opacity = '0';
+});
+
+// Change cursor on card hover
+document.addEventListener('mouseover', (e) => {
+    const card = e.target.closest('.card');
+    if (card && !isOverCard) {
+        isOverCard = true;
+        if (cursorImg) cursorImg.src = 'cursoron.gif';
+    }
+});
+
+document.addEventListener('mouseout', (e) => {
+    const card = e.target.closest('.card');
+    if (card) {
+        // Check if we're leaving to something that's not a card
+        const relatedCard = e.relatedTarget?.closest('.card');
+        if (!relatedCard) {
+            isOverCard = false;
+            if (cursorImg) cursorImg.src = 'cursoroff.gif';
+        }
+    }
+});
+
 // ========== BROWSER BACK NAVIGATION HANDLER ==========
 // Force reload when navigating back to ensure clean state
 window.addEventListener('pageshow', (event) => {
@@ -9,6 +52,147 @@ window.addEventListener('pageshow', (event) => {
         return;
     }
 });
+
+// ========== INTRO VIDEO SPLASH ==========
+const introSplash = document.getElementById('intro-splash');
+const introVideo = document.getElementById('intro-video');
+const gateway = document.getElementById('gateway');
+
+if (introVideo && introSplash) {
+    // When intro video ends, fade out and show gateway
+    introVideo.addEventListener('ended', () => {
+        introSplash.classList.add('fading');
+        gateway.classList.remove('hidden');
+
+        // Remove splash after fade animation
+        setTimeout(() => {
+            introSplash.classList.add('hidden');
+        }, 800);
+    });
+
+    // Fallback if video fails to load
+    introVideo.addEventListener('error', () => {
+        introSplash.classList.add('hidden');
+        gateway.classList.remove('hidden');
+    });
+
+    // Fallback timeout in case video doesn't trigger ended event
+    setTimeout(() => {
+        if (!introSplash.classList.contains('hidden')) {
+            introSplash.classList.add('fading');
+            gateway.classList.remove('hidden');
+            setTimeout(() => {
+                introSplash.classList.add('hidden');
+            }, 800);
+        }
+    }, 30000); // 30 second max wait
+}
+
+// ========== CUSTOM CONTEXT MENU ==========
+let contextMenu = null;
+let longPressTimer = null;
+
+// Initialize context menu when DOM is ready
+function initContextMenu() {
+    contextMenu = document.getElementById('context-menu');
+    console.log('[SOIL] Context menu init:', contextMenu ? 'found' : 'NOT FOUND');
+}
+
+// Disable default context menu and show custom one (desktop right-click)
+document.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    if (!contextMenu) {
+        contextMenu = document.getElementById('context-menu');
+    }
+    // Right-click always positions at cursor (desktop behavior)
+    showContextMenu(e.clientX, e.clientY, false);
+});
+
+// Show context menu at position
+// fullscreen = true for mobile long-press, false for desktop right-click
+function showContextMenu(x, y, fullscreen = false) {
+    if (!contextMenu) {
+        contextMenu = document.getElementById('context-menu');
+    }
+    if (!contextMenu) {
+        console.log('[SOIL] Context menu element not found!');
+        return;
+    }
+
+    contextMenu.classList.remove('hidden');
+
+    if (fullscreen) {
+        // Mobile fullscreen mode - CSS handles centering
+        contextMenu.classList.add('fullscreen');
+        contextMenu.style.left = '';
+        contextMenu.style.top = '';
+    } else {
+        // Desktop positioned mode
+        contextMenu.classList.remove('fullscreen');
+
+        const menuWidth = contextMenu.offsetWidth;
+        const menuHeight = contextMenu.offsetHeight;
+
+        // Keep menu within viewport
+        if (x + menuWidth > window.innerWidth) {
+            x = window.innerWidth - menuWidth - 10;
+        }
+        if (y + menuHeight > window.innerHeight) {
+            y = window.innerHeight - menuHeight - 10;
+        }
+
+        contextMenu.style.left = x + 'px';
+        contextMenu.style.top = y + 'px';
+    }
+}
+
+// Hide context menu on click outside
+document.addEventListener('click', (e) => {
+    if (!contextMenu) return;
+    if (!contextMenu.contains(e.target)) {
+        contextMenu.classList.add('hidden');
+    }
+});
+
+// Mobile: long press to show fullscreen menu
+document.addEventListener('touchstart', (e) => {
+    if (!contextMenu) return;
+    // Don't trigger on menu itself or cards
+    if (contextMenu.contains(e.target)) return;
+    if (e.target.closest('.card')) return;
+
+    longPressTimer = setTimeout(() => {
+        showContextMenu(0, 0, true); // fullscreen mode for mobile
+    }, 500);
+}, { passive: true });
+
+document.addEventListener('touchend', () => {
+    if (longPressTimer) {
+        clearTimeout(longPressTimer);
+        longPressTimer = null;
+    }
+}, { passive: true });
+
+document.addEventListener('touchmove', () => {
+    if (longPressTimer) {
+        clearTimeout(longPressTimer);
+        longPressTimer = null;
+    }
+}, { passive: true });
+
+// Escape key closes menu
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && contextMenu) {
+        contextMenu.classList.add('hidden');
+    }
+});
+
+// Initialize when DOM ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initContextMenu);
+} else {
+    initContextMenu();
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     const cards = document.querySelectorAll('.card');
