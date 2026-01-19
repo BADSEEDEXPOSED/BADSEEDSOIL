@@ -37,9 +37,18 @@ function hashString(str) {
 }
 
 // Check if running in production (Netlify)
-// NETLIFY env var is set to 'true' on all Netlify deployments
+// In Netlify Functions, we check for any Netlify-specific env var
 function isProduction() {
-  return process.env.NETLIFY || process.env.CONTEXT || process.env.DEPLOY_URL;
+  // Check multiple possible indicators
+  const netlifyIndicators = [
+    process.env.NETLIFY,
+    process.env.CONTEXT,
+    process.env.DEPLOY_URL,
+    process.env.URL,
+    process.env.SITE_ID,
+    process.env.DEPLOY_ID
+  ];
+  return netlifyIndicators.some(v => v !== undefined && v !== '');
 }
 
 exports.handler = async function(event, context) {
