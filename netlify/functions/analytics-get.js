@@ -47,8 +47,18 @@ exports.handler = async function(event, context) {
       const siteID = process.env.SOIL_SITE_ID;
       const token = process.env.NETLIFY_BLOBS_TOKEN || process.env.BLOB_TOKEN;
 
-      if (siteID && token) {
-        const store = getStore('soil-analytics', { siteID, token });
+      if (true) {
+        // Try automatic context first, fall back to manual config
+        let store;
+        try {
+          store = getStore('soil-analytics');
+        } catch (e) {
+          if (siteID && token) {
+            store = getStore('soil-analytics', { siteID, token });
+          } else {
+            throw e;
+          }
+        }
 
         if (type === 'summary') {
           return {
