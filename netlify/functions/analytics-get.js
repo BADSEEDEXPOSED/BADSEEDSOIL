@@ -75,7 +75,7 @@ exports.handler = async function(event, context) {
           };
         }
       } else {
-        // No blob credentials - return empty data
+        // No blob credentials - return empty data with debug info
         return {
           statusCode: 200,
           headers,
@@ -83,7 +83,13 @@ exports.handler = async function(event, context) {
             range,
             generated: Date.now(),
             mode: 'production-no-storage',
-            note: 'Blobs not configured - add NETLIFY_BLOBS_TOKEN env var',
+            debug: {
+              hasSiteID: !!siteID,
+              hasToken: !!token,
+              siteIDLength: siteID ? siteID.length : 0,
+              tokenLength: token ? token.length : 0
+            },
+            note: 'Blobs not configured',
             overview: { pageViews: 0, uniqueVisitors: 0, sessions: 0, avgSessionDuration: '0s', bounceRate: 0 },
             cardEngagement: {
               voice: { hovers: 0, clicks: 0, avgHoverTime: 0, clickRate: 0, share: 0 },
