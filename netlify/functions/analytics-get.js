@@ -4,8 +4,9 @@
 const { getStore } = require("@netlify/blobs");
 
 // Check if running in production (Netlify)
+// NETLIFY env var is set to 'true' on all Netlify deployments
 function isProduction() {
-  return process.env.NETLIFY === 'true' || process.env.CONTEXT === 'production' || process.env.CONTEXT === 'deploy-preview';
+  return process.env.NETLIFY || process.env.CONTEXT || process.env.DEPLOY_URL;
 }
 
 exports.handler = async function(event, context) {
