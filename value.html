@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #000;
+            color: rgba(192, 192, 192, 0.7);
+            font-family: 'Courier New', monospace;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-align: center;
+        }
+        .title {
+            font-size: 1.2rem;
+            letter-spacing: 4px;
+            margin-bottom: 8px;
+            opacity: 0;
+            animation: titleFadeIn 2s ease-out 0.3s forwards;
+        }
+        .subtitle {
+            font-size: 0.7rem;
+            opacity: 0;
+            letter-spacing: 2px;
+            animation: textFadeIn 2s ease-out 0.8s forwards;
+        }
+        @keyframes titleFadeIn {
+            0% {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        @keyframes textFadeIn {
+            0% {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            100% {
+                opacity: 0.5;
+                transform: translateY(0);
+            }
+        }
+        /* Hover state from parent */
+        body.parent-hover {
+            color: rgba(192, 192, 192, 0.9);
+        }
+        body.parent-hover .title {
+            text-shadow: 0 0 10px rgba(192, 192, 192, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="title">VALUE</div>
+    <div class="subtitle">THE TOKEN</div>
+
+    <script>
+        const NODE_NAME = 'value';
+
+        // Notify parent when iframe is ready
+        window.addEventListener('load', () => {
+            parent.postMessage({ type: 'IFRAME_READY', node: NODE_NAME }, '*');
+        });
+
+        // Listen for messages from parent
+        window.addEventListener('message', (event) => {
+            if (!event.data || !event.data.type) return;
+
+            switch (event.data.type) {
+                case 'PARENT_HOVER':
+                    // Parent card is being hovered
+                    if (event.data.hovering) {
+                        document.body.classList.add('parent-hover');
+                    } else {
+                        document.body.classList.remove('parent-hover');
+                    }
+                    break;
+
+                case 'CARD_HOVER':
+                    // Another card is being hovered
+                    // Can be used for cross-card effects
+                    break;
+            }
+        });
+
+        // Optional: Notify parent of internal hover events
+        document.body.addEventListener('mouseenter', () => {
+            parent.postMessage({ type: 'IFRAME_HOVER', node: NODE_NAME, data: { hovering: true } }, '*');
+        });
+
+        document.body.addEventListener('mouseleave', () => {
+            parent.postMessage({ type: 'IFRAME_HOVER', node: NODE_NAME, data: { hovering: false } }, '*');
+        });
+    </script>
+</body>
+</html>

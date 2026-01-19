@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BADSEED</title>
+    <link rel="icon" href="favicon.ico">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Main Gateway -->
+    <div id="gateway" class="gateway">
+        <!-- Background seed with glow -->
+        <div class="seed-container">
+            <div class="seed-glow"></div>
+            <img src="seed.png" alt="BADSEED" class="seed-image">
+        </div>
+
+        <!-- Card buttons -->
+        <div class="cards-container">
+            <!-- Voice Node Card -->
+            <div class="card" data-destination="voice" data-video="voice.mp4" data-url="https://badseed.netlify.app">
+                <iframe src="about:blank" data-src="voice.html" frameborder="0"></iframe>
+            </div>
+
+            <!-- Value Node Card -->
+            <div class="card" data-destination="value" data-video="value.mp4" data-url="https://badseedtoken.netlify.app">
+                <iframe src="about:blank" data-src="value.html" frameborder="0"></iframe>
+            </div>
+
+            <!-- Agent Node Card -->
+            <div class="card" data-destination="agent" data-video="agent.mp4" data-url="https://badseed-agent.netlify.app">
+                <iframe src="about:blank" data-src="agent.html" frameborder="0"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fullscreen Video Overlay -->
+    <div id="video-overlay" class="video-overlay hidden">
+        <video id="transition-video" playsinline></video>
+    </div>
+
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen hidden">
+        <canvas id="energy-canvas"></canvas>
+        <div class="loading-text">Seeding<span class="dot dot1">.</span><span class="dot dot2">.</span><span class="dot dot3">.</span></div>
+        <div class="loading-favicon-container">
+            <img src="seed.png" alt="Loading..." class="loading-favicon">
+        </div>
+    </div>
+
+    <script src="gateway.js"></script>
+</body>
+</html>
