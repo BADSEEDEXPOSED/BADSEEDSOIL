@@ -15,6 +15,25 @@
             align-items: center;
             height: 100vh;
             text-align: center;
+            overflow: hidden;
+        }
+        .video-bg {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            height: 100%;
+            width: auto;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            z-index: 0;
+        }
+        body.parent-hover .video-bg {
+            opacity: 0.6;
+        }
+        .content {
+            position: relative;
+            z-index: 1;
         }
         .title {
             font-size: 1.2rem;
@@ -59,11 +78,17 @@
     </style>
 </head>
 <body>
-    <div class="title">VALUE</div>
-    <div class="subtitle">THE TOKEN</div>
+    <video class="video-bg" muted loop playsinline preload="auto">
+        <source src="tokencard.mp4" type="video/mp4">
+    </video>
+    <div class="content">
+        <div class="title">VALUE</div>
+        <div class="subtitle">THE TOKEN</div>
+    </div>
 
     <script>
         const NODE_NAME = 'value';
+        const video = document.querySelector('.video-bg');
 
         // Notify parent when iframe is ready
         window.addEventListener('load', () => {
@@ -79,8 +104,11 @@
                     // Parent card is being hovered
                     if (event.data.hovering) {
                         document.body.classList.add('parent-hover');
+                        video.currentTime = 0;
+                        video.play().catch(() => {});
                     } else {
                         document.body.classList.remove('parent-hover');
+                        video.pause();
                     }
                     break;
 
