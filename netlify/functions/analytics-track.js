@@ -37,16 +37,13 @@ function hashString(str) {
 }
 
 // Check if running in production (Netlify)
-// In Netlify Functions, we check for any Netlify-specific env var
 function isProduction() {
-  // Check multiple possible indicators
   const netlifyIndicators = [
     process.env.NETLIFY,
     process.env.CONTEXT,
     process.env.DEPLOY_URL,
     process.env.URL,
-    process.env.SITE_ID,
-    process.env.DEPLOY_ID
+    process.env.SITE_ID
   ];
   return netlifyIndicators.some(v => v !== undefined && v !== '');
 }
@@ -118,21 +115,38 @@ exports.handler = async function(event, context) {
     const hour = new Date().getHours().toString().padStart(2, '0');
 
     if (isProduction()) {
-      // PRODUCTION: Use Netlify Blobs
-      const store = getStore('soil-analytics');
+      // PRODUCTION: Use Netlify Blobs with siteID and token from env
+      const siteID = process.env.SITE_ID;
+      const token = process.env.NETLIFY_BLOBS_TOKEN || process.env.BLOB_TOKEN;
 
-      // Store individual event
-      const eventKey = `events/${today}/${hour}/${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      await store.setJSON(eventKey, eventRecord);
+      // If we have credentials, use Blobs; otherwise fall back to returning success without storage
+      if (siteID && token) {
+        const store = getStore({
+          name: 'soil-analytics',
+          siteID,
+          token
+        });
 
-      // Update aggregated stats
-      await updateProductionStats(store, eventRecord, today);
+        // Store individual event
+        const eventKey = `events/${today}/${hour}/${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        await store.setJSON(eventKey, eventRecord);
 
-      return {
-        statusCode: 200,
-        headers,
-        body: JSON.stringify({ success: true, mode: 'production', eventKey })
-      };
+        // Update aggregated stats
+        await updateProductionStats(store, eventRecord, today);
+
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({ success: true, mode: 'production-blobs', eventKey })
+        };
+      } else {
+        // No blob credentials - just acknowledge receipt (data won't persist)
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({ success: true, mode: 'production-no-storage', note: 'Blobs not configured' })
+        };
+      }
 
     } else {
       // LOCAL DEV: Use in-memory storage

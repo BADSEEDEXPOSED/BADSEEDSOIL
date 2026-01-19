@@ -4,16 +4,13 @@
 const { getStore } = require("@netlify/blobs");
 
 // Check if running in production (Netlify)
-// In Netlify Functions, we check for any Netlify-specific env var
 function isProduction() {
-  // Check multiple possible indicators
   const netlifyIndicators = [
     process.env.NETLIFY,
     process.env.CONTEXT,
     process.env.DEPLOY_URL,
     process.env.URL,
-    process.env.SITE_ID,
-    process.env.DEPLOY_ID
+    process.env.SITE_ID
   ];
   return netlifyIndicators.some(v => v !== undefined && v !== '');
 }
@@ -46,31 +43,63 @@ exports.handler = async function(event, context) {
     const type = params.type || 'summary';
 
     if (isProduction()) {
-      // PRODUCTION: Use Netlify Blobs
-      const store = getStore('soil-analytics');
+      // PRODUCTION: Use Netlify Blobs with siteID and token from env
+      const siteID = process.env.SITE_ID;
+      const token = process.env.NETLIFY_BLOBS_TOKEN || process.env.BLOB_TOKEN;
 
-      if (type === 'summary') {
+      if (siteID && token) {
+        const store = getStore({
+          name: 'soil-analytics',
+          siteID,
+          token
+        });
+
+        if (type === 'summary') {
+          return {
+            statusCode: 200,
+            headers,
+            body: JSON.stringify(await getProductionSummary(store, range))
+          };
+        }
+
+        if (type === 'realtime') {
+          return {
+            statusCode: 200,
+            headers,
+            body: JSON.stringify(await getProductionRealtime(store))
+          };
+        }
+
+        if (type === 'events') {
+          const limit = parseInt(params.limit || '100');
+          return {
+            statusCode: 200,
+            headers,
+            body: JSON.stringify(await getProductionEvents(store, limit))
+          };
+        }
+      } else {
+        // No blob credentials - return empty data
         return {
           statusCode: 200,
           headers,
-          body: JSON.stringify(await getProductionSummary(store, range))
-        };
-      }
-
-      if (type === 'realtime') {
-        return {
-          statusCode: 200,
-          headers,
-          body: JSON.stringify(await getProductionRealtime(store))
-        };
-      }
-
-      if (type === 'events') {
-        const limit = parseInt(params.limit || '100');
-        return {
-          statusCode: 200,
-          headers,
-          body: JSON.stringify(await getProductionEvents(store, limit))
+          body: JSON.stringify({
+            range,
+            generated: Date.now(),
+            mode: 'production-no-storage',
+            note: 'Blobs not configured - add NETLIFY_BLOBS_TOKEN env var',
+            overview: { pageViews: 0, uniqueVisitors: 0, sessions: 0, avgSessionDuration: '0s', bounceRate: 0 },
+            cardEngagement: {
+              voice: { hovers: 0, clicks: 0, avgHoverTime: 0, clickRate: 0, share: 0 },
+              value: { hovers: 0, clicks: 0, avgHoverTime: 0, clickRate: 0, share: 0 },
+              agent: { hovers: 0, clicks: 0, avgHoverTime: 0, clickRate: 0, share: 0 }
+            },
+            topCountries: [],
+            topReferers: [],
+            hourlyActivity: Array(24).fill(0),
+            peakHour: 0,
+            dailyStats: []
+          })
         };
       }
 
@@ -188,7 +217,9 @@ async function getProductionSummary(store, range) {
     }
   }
 
-  return formatSummaryResponse(totals, dailyStats, range);
+  const result = formatSummaryResponse(totals, dailyStats, range);
+  result.mode = 'production-blobs';
+  return result;
 }
 
 async function getProductionRealtime(store) {
@@ -205,7 +236,7 @@ async function getProductionRealtime(store) {
   for (const h of [prevHour, hour]) {
     try {
       const { blobs } = await store.list({ prefix: `events/${today}/${h}/` });
-      for (const blob of blobs.slice(-50)) { // Get last 50 from each hour
+      for (const blob of blobs.slice(-50)) {
         const event = await store.get(blob.key, { type: 'json' });
         if (event && event.timestamp >= thirtyMinutesAgo) {
           recentEvents.push(event);
@@ -216,7 +247,9 @@ async function getProductionRealtime(store) {
     }
   }
 
-  return formatRealtimeResponse(recentEvents, now, fiveMinutesAgo);
+  const result = formatRealtimeResponse(recentEvents, now, fiveMinutesAgo);
+  result.mode = 'production-blobs';
+  return result;
 }
 
 async function getProductionEvents(store, limit) {
@@ -243,7 +276,7 @@ async function getProductionEvents(store, limit) {
 
   return {
     generated: Date.now(),
-    mode: 'production',
+    mode: 'production-blobs',
     count: events.length,
     events: events.sort((a, b) => b.timestamp - a.timestamp)
   };
