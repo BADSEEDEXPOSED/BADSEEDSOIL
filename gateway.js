@@ -13,6 +13,48 @@ document.addEventListener('DOMContentLoaded', () => {
     let particles = [];
     let tendrils = [];
 
+    // ========== BROWSER BACK NAVIGATION HANDLER ==========
+    // Reset UI state when user navigates back via browser history
+    window.addEventListener('pageshow', (event) => {
+        // event.persisted is true when page is restored from bfcache
+        if (event.persisted || performance.getEntriesByType('navigation')[0]?.type === 'back_forward') {
+            resetPageState();
+        }
+    });
+
+    function resetPageState() {
+        // Reset transition state
+        isTransitioning = false;
+
+        // Hide video overlay
+        if (videoOverlay) {
+            videoOverlay.classList.add('hidden');
+        }
+
+        // Stop and reset video
+        if (transitionVideo) {
+            transitionVideo.pause();
+            transitionVideo.currentTime = 0;
+            transitionVideo.src = '';
+        }
+
+        // Hide loading screen and remove fading class
+        if (loadingScreen) {
+            loadingScreen.classList.add('hidden');
+            loadingScreen.classList.remove('fading');
+        }
+
+        // Stop energy effect if running
+        stopEnergyEffect();
+
+        // Clear canvas if it exists
+        if (ctx && energyCanvas) {
+            ctx.clearRect(0, 0, energyCanvas.width, energyCanvas.height);
+        }
+
+        console.log('[SOIL] Page state reset after back navigation');
+    }
+
     // Track iframe ready states
     const iframeReadyState = {
         voice: false,
