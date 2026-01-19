@@ -1,41 +1,12 @@
 // BADSEED SOIL - Gateway Controller
 
 // ========== BROWSER BACK NAVIGATION HANDLER ==========
-// Must be outside DOMContentLoaded to catch bfcache restoration
+// Force reload when navigating back to ensure clean state
 window.addEventListener('pageshow', (event) => {
-    // Reset if page is restored from bfcache OR if loading screen is visible
-    const loadingScreen = document.getElementById('loading-screen');
-    const videoOverlay = document.getElementById('video-overlay');
-    const isLoadingVisible = loadingScreen && !loadingScreen.classList.contains('hidden');
-    const isVideoVisible = videoOverlay && !videoOverlay.classList.contains('hidden');
-
-    if (event.persisted || isLoadingVisible || isVideoVisible) {
-        // Reset all transition UI
-        if (videoOverlay) {
-            videoOverlay.classList.add('hidden');
-        }
-
-        const transitionVideo = document.getElementById('transition-video');
-        if (transitionVideo) {
-            transitionVideo.pause();
-            transitionVideo.currentTime = 0;
-            transitionVideo.src = '';
-        }
-
-        if (loadingScreen) {
-            loadingScreen.classList.add('hidden');
-            loadingScreen.classList.remove('fading');
-        }
-
-        const energyCanvas = document.getElementById('energy-canvas');
-        if (energyCanvas) {
-            const ctx = energyCanvas.getContext('2d');
-            if (ctx) {
-                ctx.clearRect(0, 0, energyCanvas.width, energyCanvas.height);
-            }
-        }
-
-        console.log('[SOIL] Page state reset on pageshow');
+    if (event.persisted) {
+        // Page was restored from bfcache - force reload for clean state
+        window.location.reload();
+        return;
     }
 });
 
@@ -51,11 +22,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let energyAnimationId = null;
     let particles = [];
     let tendrils = [];
-
-    // Reset isTransitioning flag on pageshow (for bfcache restoration)
-    window.addEventListener('pageshow', () => {
-        isTransitioning = false;
-    });
 
     // Track iframe ready states
     const iframeReadyState = {
