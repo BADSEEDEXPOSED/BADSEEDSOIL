@@ -48,11 +48,7 @@ exports.handler = async function(event, context) {
       const token = process.env.NETLIFY_BLOBS_TOKEN || process.env.BLOB_TOKEN;
 
       if (siteID && token) {
-        const store = getStore({
-          name: 'soil-analytics',
-          siteID,
-          token
-        });
+        const store = getStore('soil-analytics', { siteID, token });
 
         if (type === 'summary') {
           return {

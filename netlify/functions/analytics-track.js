@@ -121,11 +121,7 @@ exports.handler = async function(event, context) {
 
       // If we have credentials, use Blobs; otherwise fall back to returning success without storage
       if (siteID && token) {
-        const store = getStore({
-          name: 'soil-analytics',
-          siteID,
-          token
-        });
+        const store = getStore('soil-analytics', { siteID, token });
 
         // Store individual event
         const eventKey = `events/${today}/${hour}/${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
